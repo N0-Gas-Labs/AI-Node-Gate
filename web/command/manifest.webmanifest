@@ -1,0 +1,49 @@
+{
+  "name": "AI-Node-Gate Command Center",
+  "short_name": "Command",
+  "description": "Deploy AI scouts, decide at the gate, grow your pocketbook \u2014 sovereign and self-hosted.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080b11",
+  "theme_color": "#080b11",
+  "categories": ["productivity", "business", "finance"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Deploy a scout",
+      "short_name": "Deploy",
+      "url": "./index.html#deploy"
+    },
+    {
+      "name": "The Gate \u2014 decide",
+      "short_name": "Gate",
+      "url": "./index.html#gate"
+    },
+    {
+      "name": "Pocketbook",
+      "short_name": "Pocket",
+      "url": "./index.html#pocket"
+    }
+  ]
+}

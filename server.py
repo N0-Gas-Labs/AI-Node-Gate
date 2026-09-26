@@ -85,6 +85,15 @@ class Handler(BaseHTTPRequestHandler):
     def _serve_static(self, path):
         if path == "/" or path == "":
             path = "/index.html"
+        # Redirect the app root to its trailing-slash form so relative asset
+        # paths (css/, js/, icons/, sw.js) resolve inside /command/.
+        if path == "/command":
+            self.send_response(301)
+            self.send_header("Location", "/command/")
+            self.end_headers()
+            return
+        if path == "/command/":
+            path = "/command/index.html"
         rel = path.lstrip("/")
         full = os.path.normpath(os.path.join(WEB_DIR, rel))
         if not full.startswith(WEB_DIR) or not os.path.isfile(full):
@@ -117,6 +126,14 @@ class Handler(BaseHTTPRequestHandler):
                 "model": _model.model,
                 "available": _model.available(),
                 "note": "Point the hub at your own runtime (Ollama / llama.cpp / LM Studio).",
+            })
+        if path == "/api/channels":
+            from core import scouts as _scouts
+            return self._json({
+                "channels": [
+                    {"id": k, "label": v["label"], "blurb": v["blurb"]}
+                    for k, v in _scouts.CHANNELS.items()
+                ]
             })
         if path == "/api/export":
             b = bundle_mod.export_bundle(hub.store, hub.keyring.arbitrator["public"])
@@ -161,6 +178,19 @@ class Handler(BaseHTTPRequestHandler):
                     _model, node["name"], node["role"], data.get("intent", "")
                 )
                 return self._json({"ok": True, "draft": text, "source": source})
+            if path == "/api/scout/deploy":
+                result = hub.deploy_scout(
+                    data.get("scout_id"), data.get("mission", ""),
+                    channel=data.get("channel", "gigs"),
+                    limit=int(data.get("limit", 6) or 6),
+                )
+                return self._json({"ok": True, **result})
+            if path == "/api/opportunity/decide":
+                d = hub.decide_opportunity(
+                    data.get("opportunity_id"), data.get("action"),
+                    data.get("rationale", ""),
+                )
+                return self._json({"ok": True, "decision": d})
         except ValueError as e:
             return self._json({"ok": False, "error": str(e)}, 400)
         return self._json({"ok": False, "error": "not found"}, 404)
