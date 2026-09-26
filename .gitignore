@@ -1,0 +1,8 @@
+# The hub's local state: database, keyring, and any exports.
+# This is yours, not the repository's — never commit your keys.
+.ngg/
+*.bundle.json
+
+# Python
+__pycache__/
+*.pyc

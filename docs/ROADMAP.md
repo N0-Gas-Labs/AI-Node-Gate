@@ -1,27 +1,31 @@
 # Roadmap
 
-This roadmap is a direction, not a contract. It is written in phases so that each phase is useful on its own and none depends on the next being finished. The first phase is done: the vision, the architecture, and a working prototype of the hub exist in this repository.
+This roadmap is a direction, not a contract. It is written in phases so that each is useful on its own and none depends on the next being finished. Two phases are done: the concept is established, and the hub has been rebuilt as a sovereign, self-hosted system with a verifiable record.
 
 ## Phase 0 — Genesis (complete)
 
-The founding phase establishes the concept and makes it visible. It delivers the vision document, the architecture document, a working single-page prototype of the hub with node registration, proposal submission, human arbitration, and a ledger, and the contribution guidelines that let others extend the work. The prototype runs with no build step and persists its state locally.
+The founding phase established the concept and made it visible: the vision, the architecture, and a working single-page prototype of the hub. It proved the idea was legible.
 
-## Phase 1 — Make the hub real
+## Phase 1 — Sovereignty (complete)
 
-The next phase turns the prototype from a demonstration into something a person would actually use day to day. The most valuable addition is persistence that survives more than a browser: an export and import of hub state as a portable JSON file, so a plan can be saved, shared, and versioned alongside the repository. Alongside that, the arbitration flow should grow richer — the ability to leave a written rationale on each decision, to set deadlines on proposals, and to filter the board by node, state, and priority so that a human can find the decision that needs them. This phase is about making the gate pleasant to sit at.
+This phase replaced the browser toy with a system you own. It delivered a self-hosted runtime built on the Python standard library with no external dependencies; durable storage in a single SQLite file; real Ed25519 identity for nodes and the human arbitrator, with signed proposals and signed decisions; an append-only, hash-chained ledger that is tamper-evident and verifiable offline; a portable, verifiable export bundle; a compute layer that connects nodes to a local model runtime; an operator command line; and a web console that surfaces fingerprints, signature status, integrity, and the chain itself.
 
-## Phase 2 — Connect real nodes
+## Phase 2 — Harden the keys
 
-With the hub usable, the next step is to connect it to actual models. A node in the prototype is currently a description; in this phase it becomes a live participant with an endpoint. The hub gains a thin adapter layer that can send a proposal's context to a model and receive a response, so that proposals can be drafted by the nodes themselves rather than typed by hand. The adapter should be transport-agnostic — a local process, an HTTP endpoint, or a hosted API — so that the hub is not tied to any one provider. The human arbitration layer does not change in this phase; that is the point. Nodes get smarter, the gate stays the gate.
+The most important next step is to close the gap named honestly in `SOVEREIGNTY.md`: the hub currently holds the operator's signing key. This phase moves signing to the operator's own device. The hub should be able to run in a **non-custodial mode** where it only verifies, and decisions arrive pre-signed from the operator's machine — ideally backed by a hardware token. Independent nodes should likewise generate their own keys and hand over only their public key, so the hub never holds a secret it could abuse. The record format does not change; only who holds the pen does.
 
-## Phase 3 — Coordination intelligence
+## Phase 3 — Durable and replicated record
 
-Once real nodes are connected, the hub can begin to help with the coordination it was built for. This phase adds routing: the hub recommends which node should receive a proposal based on declared capabilities and current load, and the human can accept or override the recommendation. It adds dependency resolution that is visible as a graph rather than a list, so a human can see the shape of a plan at a glance. And it adds a notion of confidence, so that proposals can be triaged and the human's attention spent where it matters most.
+A hash chain proves integrity but not availability. This phase makes the ledger survive the loss of any one machine: append-only replication across several nodes, a signed checkpoint that lets a lightweight client confirm it is looking at the current head, and a restore path that rebuilds a hub from a bundle plus subsequent checkpoints. The goal is a record that is not just tamper-evident but durable.
 
-## Phase 4 — Scale and governance
+## Phase 4 — Coordination intelligence
 
-The final phase in view is about operating the hub at the scale of many nodes and many humans. This includes role-based arbitration, so that different decisions can be routed to different human authorities; a durable, append-only ledger that can be reviewed and audited over long periods; and the tooling to run the hub as a shared service rather than a personal one. The governing principle throughout is the one the project started with: autonomy for the nodes, authority for the human, and a record of both.
+With identity and durability in place, the hub can help with the coordination it was built for: routing that recommends which node should receive a proposal based on declared capabilities and load; dependency resolution rendered as a graph rather than a list; and a notion of confidence so the human's attention is spent where it matters. The human stays at the gate; the hub gets better at putting the right decision in front of them.
+
+## Phase 5 — Federation
+
+Sovereignty does not have to mean isolation. This phase lets independent hubs recognise each other: a node in one hub can submit a proposal to another, carrying its own key and a verifiable history, and each hub's human arbitrates only what crosses its own gate. Federation turns a collection of owned hubs into a network of owned hubs, without a central authority that any of them has to trust.
 
 ## How to contribute to the roadmap
 
-The roadmap is open to argument. If you are working on the hub and see a better sequence, or a phase that should be split, or something important that is missing, open an issue or a pull request and make the case. The project is explicitly built to be expanded forward, and the roadmap is part of what that means.
+The roadmap is open to argument. If you see a better sequence, a phase that should be split, or something important that is missing, open an issue or a pull request and make the case. The project is explicitly built to be expanded forward, and the roadmap is part of what that means.

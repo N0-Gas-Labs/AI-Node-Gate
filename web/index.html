@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-Node-Gate — Sovereign Hub</title>
+  <meta name="description" content="A self-hosted, human-arbitrated coordination hub with a cryptographically verifiable record." />
+  <link rel="stylesheet" href="css/styles.css" />
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+  <div class="app">
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark">NG</div>
+        <div>
+          <h1>AI-Node-Gate</h1>
+          <p>Sovereign Hub &middot; self-hosted &middot; zero dependencies</p>
+        </div>
+      </div>
+      <div class="hub-id" id="hub-id">
+        <div><span class="k">arbitrator</span> <span class="v" id="arb-fp">…</span></div>
+        <div><span class="k">ledger</span> <span class="v" id="ledger-height">…</span></div>
+      </div>
+    </header>
+
+    <section class="stats">
+      <div class="stat accent"><div class="num" id="s-nodes">0</div><div class="lbl">Nodes</div></div>
+      <div class="stat amber"><div class="num" id="s-pending">0</div><div class="lbl">At the Gate</div></div>
+      <div class="stat green"><div class="num" id="s-approved">0</div><div class="lbl">Approved</div></div>
+      <div class="stat cyan"><div class="num" id="s-ledger">0</div><div class="lbl">Ledger Entries</div></div>
+      <div class="stat"><div class="num" id="s-integrity">—</div><div class="lbl">Integrity</div></div>
+    </section>
+
+    <div class="grid">
+
+      <!-- ============ LEFT COLUMN ============ -->
+      <div>
+        <section class="panel">
+          <div class="panel-head"><h2>Register Node</h2></div>
+          <div class="panel-body">
+            <div class="field"><label for="n-name">Name</label><input type="text" id="n-name" placeholder="e.g. Atlas" /></div>
+            <div class="field"><label for="n-role">Role</label><input type="text" id="n-role" placeholder="e.g. Planner, Critic" /></div>
+            <div class="field"><label for="n-caps">Capabilities (comma separated)</label><input type="text" id="n-caps" placeholder="plan, route, review" /></div>
+            <button class="btn primary full" id="btn-add-node">＋ Register node &amp; mint keypair</button>
+            <div class="hint">Each node gets its own Ed25519 identity. Its proposals are signed and verifiable.</div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h2>Node Registry</h2><span class="chip" id="node-count">0</span></div>
+          <div class="panel-body" id="node-list"><div class="empty">No nodes yet.</div></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h2>Integrity</h2><button class="btn sm cyan" id="btn-verify">verify now</button></div>
+          <div class="panel-body">
+            <div class="integrity" id="integrity">
+              <div class="check"><span class="ico">?</span><span class="lbl">Not yet verified.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h2>Compute Sovereignty</h2><span class="chip" id="model-badge">…</span></div>
+          <div class="panel-body">
+            <div class="kv"><span class="k">runtime endpoint</span><span class="v" id="model-endpoint">—</span></div>
+            <div class="kv"><span class="k">model</span><span class="v" id="model-name">—</span></div>
+            <div class="hint">Point the hub at your own Ollama / llama.cpp / LM Studio runtime. Nodes then draft with a model on hardware you control.</div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h2>Sovereign Bundle</h2></div>
+          <div class="panel-body">
+            <a class="btn full cyan" href="/api/export" download>⭳ Export verifiable bundle</a>
+            <div class="hint">One JSON file with every node, proposal, decision, and the full hash-chained ledger. Verifiable offline by anyone.</div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ============ RIGHT COLUMN ============ -->
+      <div>
+        <section class="panel">
+          <div class="panel-head"><h2>Raise Proposal</h2></div>
+          <div class="panel-body">
+            <div class="field"><label for="p-title">Title</label><input type="text" id="p-title" placeholder="What is being proposed?" /></div>
+            <div class="field"><label for="p-desc">Description</label><textarea id="p-desc" placeholder="Intent, scope, expected outcome."></textarea></div>
+            <div class="row">
+              <div class="field"><label for="p-node">Raised by (signer)</label><select id="p-node"></select></div>
+              <div class="field"><label for="p-target">Assign to</label><select id="p-target"></select></div>
+            </div>
+            <div class="row">
+              <div class="field"><label for="p-priority">Priority</label>
+                <select id="p-priority"><option value="high">High</option><option value="med" selected>Medium</option><option value="low">Low</option></select>
+              </div>
+              <div class="field"><label for="p-depends">Depends on</label><select id="p-depends"></select></div>
+            </div>
+            <div class="row">
+              <button class="btn primary" id="btn-add-prop" style="flex:2">➜ Sign &amp; submit</button>
+              <button class="btn purple" id="btn-draft" style="flex:1" title="Ask a local model to draft">✦ Draft</button>
+            </div>
+            <div class="hint">The proposal is signed with the node's key and enters the gate. It stays inert until you arbitrate.</div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h2>The Gate — Arbitration</h2><button class="btn sm ghost" id="btn-refresh">↻ refresh</button></div>
+          <div class="panel-body">
+            <div id="prop-list"><div class="empty">No proposals yet.</div></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h2>Ledger — Hash-Chained Record</h2><span class="chip" id="ledger-chip">append-only</span></div>
+          <div class="panel-body ledger" id="ledger"><div class="empty">The ledger is empty.</div></div>
+        </section>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      AI-Node-Gate &middot; autonomy for the nodes, authority for the human, and a <span class="seal">verifiable</span> record of both.
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="js/app.js"></script>
+</body>
+</html>

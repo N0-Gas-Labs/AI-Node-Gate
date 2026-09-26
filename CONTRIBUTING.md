@@ -2,9 +2,11 @@
 
 AI-Node-Gate is built to be expanded forward, and that invitation is open to people and to AI alike. Whether you are a developer, a designer, a writer, or a model reading this repository, there is a place for you here. This document explains how to take part.
 
-## The one rule that matters
+## The two rules that matter
 
-Keep the human at the gate. Every change to this project should preserve the central property of the hub: autonomous nodes may coordinate and propose freely, but no consequential action reaches an effect without a human decision, and every decision is recorded. If a proposed change would let a node act without arbitration, or would let a decision go unrecorded, it is out of scope for this project, however clever it is.
+**Keep the human at the gate.** Every change should preserve the central property of the hub: autonomous nodes may coordinate and propose freely, but no consequential action reaches an effect without a human decision, and every decision is recorded. If a change would let a node act without arbitration, or let a decision go unrecorded, it is out of scope, however clever it is.
+
+**Keep it sovereign.** The hub must remain something a person can own. That means no external dependencies — the Python standard library and this repository are the whole system. It means data stays in one file the operator holds, identity stays cryptographic, the record stays verifiable offline, and compute stays pointed at the operator's own hardware by default. A pull request that adds a dependency, phones home, or moves authority off the operator's machine is out of scope unless it is strictly opt-in and clearly labelled.
 
 ## Ways to contribute
 
@@ -12,7 +14,14 @@ You do not need to write code to contribute. Clear writing about the concept, th
 
 ## Working with the repository
 
-Clone the repository and open the prototype locally. Because the hub is a static site, you can serve it with any simple HTTP server — `python3 -m http.server 8080` from the repository root is enough — and then open the address it prints. There is nothing to install and nothing to compile. State is kept in the browser's local storage, so experiments are safe: clear your browser storage to start fresh.
+Clone the repository and run the hub locally. There is nothing to install — no `pip`, no build step, no account. From the repository root:
+
+```bash
+python3 manage.py init     # creates ./.ngg (a database and a keyring)
+python3 manage.py serve    # serves the console at http://127.0.0.1:8787
+```
+
+The whole hub lives in `.ngg/`. Delete that directory to start fresh, or copy it to move the hub elsewhere. To check your work, run `python3 manage.py verify` — it recomputes the ledger chain and re-verifies every signature, and it should always come back clean.
 
 ## Making a change
 
