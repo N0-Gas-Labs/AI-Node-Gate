@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AI-Node-Gate — Market Research Visual</title>
+<style>
+  :root{
+    --bg:#0a0e14; --panel:#111823; --panel2:#0d131c; --line:#1e2a3a;
+    --ink:#e6edf6; --muted:#8fa3bd; --dim:#5f7288;
+    --accent:#38e0c8; --accent2:#4aa8ff; --gold:#f5c451; --red:#ff6b6b; --green:#4ade80;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .page{width:1100px;margin:0 auto;padding:40px 44px 56px;}
+  header{border-bottom:1px solid var(--line);padding-bottom:22px;margin-bottom:30px;}
+  .brand{display:flex;align-items:center;gap:14px;}
+  .logo{width:44px;height:44px;border-radius:11px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex;align-items:center;justify-content:center;font-weight:800;color:#06121a;font-size:20px;}
+  h1{font-size:26px;margin:0;letter-spacing:-.3px;}
+  .sub{color:var(--muted);font-size:13.5px;margin-top:4px;}
+  .kicker{color:var(--accent);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+  h2{font-size:16px;margin:0 0 14px;letter-spacing:.2px;display:flex;align-items:center;gap:9px;}
+  h2::before{content:"";width:4px;height:16px;background:var(--accent);border-radius:2px;display:inline-block;}
+  .grid{display:grid;gap:18px;}
+  .g2{grid-template-columns:1fr 1fr;}
+  .g3{grid-template-columns:1fr 1fr 1fr;}
+  .g4{grid-template-columns:repeat(4,1fr);}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;}
+  .card.tight{padding:16px 18px;}
+  section{margin-bottom:26px;}
+  .stat{font-size:30px;font-weight:800;letter-spacing:-.5px;line-height:1;}
+  .stat.sm{font-size:24px}
+  .stat .unit{font-size:15px;color:var(--muted);font-weight:600;}
+  .lbl{color:var(--muted);font-size:12px;margin-top:8px;line-height:1.4;}
+  .tag{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.4px;}
+  .t-green{background:rgba(74,222,128,.14);color:var(--green);border:1px solid rgba(74,222,128,.3)}
+  .t-blue{background:rgba(74,168,255,.14);color:var(--accent2);border:1px solid rgba(74,168,255,.3)}
+  .t-gold{background:rgba(245,196,81,.14);color:var(--gold);border:1px solid rgba(245,196,81,.3)}
+  .t-red{background:rgba(255,107,107,.14);color:var(--red);border:1px solid rgba(255,107,107,.3)}
+  /* bar chart */
+  .bar{height:9px;border-radius:6px;background:var(--panel2);overflow:hidden;margin-top:9px;}
+  .bar > span{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent),var(--accent2));}
+  .row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-top:14px;}
+  .row:first-of-type{margin-top:0}
+  .row .name{color:var(--ink);font-weight:600}
+  .row .val{color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums}
+  .row .cagr{color:var(--muted);font-size:11.5px}
+  /* positioning 2x2 */
+  .pos{position:relative;height:300px;border:1px solid var(--line);border-radius:12px;background:
+    linear-gradient(var(--line) 1px,transparent 1px) 0 0/100% 50%,
+    linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 0/50% 100%;
+    background-color:var(--panel2);}
+  .pos .axis{position:absolute;color:var(--dim);font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+  .pos .x1{bottom:8px;left:10px}
+  .pos .x2{bottom:8px;right:10px}
+  .pos .y1{top:8px;left:10px}
+  .pos .y2{bottom:34px;left:10px;writing-mode:vertical-rl;transform:rotate(180deg)}
+  .dot{position:absolute;transform:translate(-50%,-50%);font-size:11px;font-weight:700;color:var(--ink);
+    background:rgba(74,168,255,.16);border:1px solid rgba(74,168,255,.45);padding:5px 10px;border-radius:20px;white-space:nowrap;}
+  .dot.hero{background:rgba(56,224,200,.2);border:1px solid var(--accent);color:var(--accent);box-shadow:0 0 0 4px rgba(56,224,200,.12);font-size:12px;}
+  .dot.grey{background:rgba(143,163,189,.1);border:1px solid var(--line);color:var(--muted);}
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:700}
+  td .price{color:var(--accent);font-weight:700}
+  tr.hi td{background:rgba(56,224,200,.06)}
+  tr.hi td:first-child{border-left:3px solid var(--accent)}
+  .yes{color:var(--green);font-weight:700}.no{color:var(--red);font-weight:700}.lim{color:var(--gold);font-weight:700}
+  ul.clean{margin:0;padding-left:0;list-style:none}
+  ul.clean li{font-size:12.5px;color:var(--muted);padding:6px 0 6px 20px;position:relative;line-height:1.45}
+  ul.clean li::before{content:"▸";position:absolute;left:2px;color:var(--accent)}
+  ul.clean li b{color:var(--ink)}
+  .foot{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);color:var(--dim);font-size:10.5px;line-height:1.6}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);
+    font-size:11px;padding:5px 11px;border-radius:20px;margin:3px 5px 3px 0}
+  .hero-note{background:linear-gradient(135deg,rgba(56,224,200,.09),rgba(74,168,255,.05));
+    border:1px solid rgba(56,224,200,.3);border-radius:14px;padding:18px 22px;}
+  .hero-note .q{font-size:16px;font-weight:700;color:var(--accent);line-height:1.4}
+  .hero-note .a{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.5}
+  @media print{body{background:var(--bg)} .page{padding:24px}}
+</style>
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="brand">
+      <div class="logo">◈</div>
+      <div>
+        <div class="kicker">No_Gas_Labs™ · Market Research</div>
+        <h1>AI-Node-Gate — Path to Profitability</h1>
+        <div class="sub">The audit-grade, sovereign decision layer for human-arbitrated AI · Q1 2026</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section>
+    <div class="hero-note">
+      <div class="q">“Put a human signature on every AI decision — and keep the proof on your own hardware.”</div>
+      <div class="a">AI-Node-Gate is the self-hosted hub where autonomous AI nodes propose, a human decides at the gate, and every decision is Ed25519-signed into a SHA-256 hash-chained ledger that verifies offline. Zero dependencies. One SQLite file. Your keys.</div>
+    </div>
+  </section>
+
+  <!-- MARKET SIZES -->
+  <section>
+    <h2>Four markets, one demand: control, observe, and prove what AI does</h2>
+    <div class="grid g4">
+      <div class="card tight">
+        <div class="stat">$6.27<span class="unit">B</span></div>
+        <div class="lbl">Agentic AI orchestration &amp; memory (2025)</div>
+        <div class="bar"><span style="width:35%"></span></div>
+        <div class="row"><span class="cagr">→ $28.45B by 2030</span><span class="val">35.3%</span></div>
+      </div>
+      <div class="card tight">
+        <div class="stat">$308<span class="unit">M</span></div>
+        <div class="lbl">AI governance (2025) — our buyer’s budget line</div>
+        <div class="bar"><span style="width:36%"></span></div>
+        <div class="row"><span class="cagr">→ $3.59B by 2033</span><span class="val">36.0%</span></div>
+      </div>
+      <div class="card tight">
+        <div class="stat">$2.4<span class="unit">B</span></div>
+        <div class="lbl">Human-in-the-loop AI (2025) — the “human gate”</div>
+        <div class="bar"><span style="width:19.3%"></span></div>
+        <div class="row"><span class="cagr">→ $11.8B by 2034</span><span class="val">19.3%</span></div>
+      </div>
+      <div class="card tight">
+        <div class="stat">$15.0<span class="unit">B</span></div>
+        <div class="lbl">Sovereign AI infrastructure (2025)</div>
+        <div class="bar"><span style="width:28%"></span></div>
+        <div class="row"><span class="cagr">→ $177.1B by 2035</span><span class="val">28.0%</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- POSITIONING + SOVEREIGNTY -->
+  <section class="grid g2">
+    <div class="card">
+      <h2>Positioning: the gap the incumbents leave</h2>
+      <div class="pos">
+        <span class="axis y1">Owned / self-hosted</span>
+        <span class="axis y2">Sovereignty</span>
+        <span class="axis x1">Executes agents</span>
+        <span class="axis x2">Proves decisions</span>
+
+        <span class="dot grey" style="left:22%;top:26%">CrewAI Enterprise</span>
+        <span class="dot grey" style="left:30%;top:66%">LangSmith (self-host = Ent.)</span>
+        <span class="dot grey" style="left:20%;top:80%">Langfuse / Arize</span>
+        <span class="dot grey" style="left:66%;top:30%">AI governance SaaS</span>
+        <span class="dot grey" style="left:74%;top:72%">Scale AI (HITL labor)</span>
+        <span class="dot hero" style="left:82%;top:20%">AI-Node-Gate</span>
+      </div>
+      <div class="lbl" style="margin-top:12px">Top-right = owned infrastructure <b>and</b> provable decisions. That quadrant is nearly empty. Frameworks execute; observability logs; governance dashboards advise. None produce a signed, human-arbitrated, offline-verifiable record you fully own.</div>
+    </div>
+
+    <div class="card">
+      <h2>Sovereignty is the majority, not a niche</h2>
+      <ul class="clean">
+        <li><b>AI governance:</b> on-premises held the <b>largest deployment share</b> (2025); government &amp; defense is the largest vertical.</li>
+        <li><b>Sovereign AI infra:</b> on-premises <b>dominated</b> 2025; govt/defense dominated; Europe leads at <b>34.2%</b> share.</li>
+        <li><b>Human-in-the-loop:</b> on-premises is <b>38.7%</b> of revenue, growing 16.4% CAGR.</li>
+        <li><b>Agentic orchestration:</b> compliance mandates for LLM audit trails are a named growth driver.</li>
+      </ul>
+      <div style="margin-top:12px">
+        <span class="pill">Zero dependencies</span>
+        <span class="pill">One SQLite file</span>
+        <span class="pill">Keys, not accounts</span>
+        <span class="pill">Offline verify</span>
+        <span class="pill">Air-gap ready</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- REGULATORY TAILWIND -->
+  <section class="grid g3">
+    <div class="card tight">
+      <span class="tag t-red">Regulatory tailwind</span>
+      <div class="stat sm" style="margin-top:12px">EUR 30M</div>
+      <div class="lbl">or <b>6% of global turnover</b> — top EU AI Act penalties. Turns oversight from “nice to have” into mandatory evidence.</div>
+    </div>
+    <div class="card tight">
+      <span class="tag t-gold">Enterprise contracts</span>
+      <div class="stat sm" style="margin-top:12px">&gt;$5M<span class="unit">/yr</span></div>
+      <div class="lbl">HITL enterprise contracts frequently exceed this at the top end. Budget authority already exists.</div>
+    </div>
+    <div class="card tight">
+      <span class="tag t-green">Already mainstream</span>
+      <div class="stat sm" style="margin-top:12px">67%</div>
+      <div class="lbl">of Fortune 500 AI deployers already use human-in-the-loop review. The practice is normal; the proof tooling is not.</div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section>
+    <h2>Pricing: anchor on comparables, invert the self-host gate</h2>
+    <div class="card" style="padding:8px 10px 4px">
+      <table>
+        <thead>
+          <tr><th>Product</th><th>Entry</th><th>Mid</th><th>Enterprise</th><th>Self-host</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>LangSmith (LangChain)</td><td>Free (5k traces)</td><td class="price">$39/seat/mo</td><td>Custom</td><td class="no">Enterprise only</td></tr>
+          <tr><td>Langfuse</td><td>Free (50k units)</td><td class="price">$29–$199/mo</td><td class="price">$2,499/mo</td><td class="yes">Yes (OSS)</td></tr>
+          <tr><td>Arize Phoenix</td><td>Free (OSS)</td><td class="price">$50/mo</td><td>Custom</td><td class="yes">Yes (OSS)</td></tr>
+          <tr><td>Braintrust</td><td>Free</td><td class="price">$249/mo</td><td>Custom</td><td class="lim">Limited</td></tr>
+          <tr><td>CrewAI</td><td>Free (50 exec/mo)</td><td>—</td><td>Custom (VPC/own infra)</td><td class="yes">Yes (Ent.)</td></tr>
+          <tr class="hi"><td><b>AI-Node-Gate</b></td><td><b>Free (full core)</b></td><td class="price">$199–$499/mo</td><td class="price">$50k–$500k+/yr</td><td class="yes">Yes (default)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid g4" style="margin-top:16px">
+      <div class="card tight"><span class="tag t-blue">Community</span><div class="stat sm" style="margin-top:10px">Free</div><div class="lbl">Full runtime, record format, console, CLI, offline verify — the distribution engine.</div></div>
+      <div class="card tight"><span class="tag t-blue">Team</span><div class="stat sm" style="margin-top:10px">$199–499<span class="unit">/mo</span></div><div class="lbl">Multi-node, basic policy, managed convenience, email support.</div></div>
+      <div class="card tight"><span class="tag t-gold">Business</span><div class="stat sm" style="margin-top:10px">$2,000–2,999<span class="unit">/mo</span></div><div class="lbl">SSO/RBAC, policy enforcement, HA ledger, audit exports. Anchored to Langfuse Enterprise $2,499.</div></div>
+      <div class="card tight"><span class="tag t-green">Sovereign</span><div class="stat sm" style="margin-top:10px">$50k–500k+<span class="unit">/yr</span></div><div class="lbl">Non-custodial + hardware keys, air-gapped deploy, compliance packs, SLA, forward-deployed eng.</div></div>
+    </div>
+  </section>
+
+  <!-- ROADMAP -->
+  <section class="grid g2">
+    <div class="card">
+      <h2>Feature → revenue roadmap (by impact per effort)</h2>
+      <ul class="clean">
+        <li><b>Tier 1 — unlock enterprise:</b> non-custodial + hardware-backed signing · compliance-evidence packs (EU AI Act / ISO 42001 / SOC 2) · SSO/RBAC/policy.</li>
+        <li><b>Tier 2 — scale:</b> replicated/HA ledger + signed checkpoints · air-gapped appliance kit · compliance onboarding services.</li>
+        <li><b>Tier 3 — moat:</b> coordination intelligence (routing, dependency graphs, confidence) · federation across hubs · optional managed tier.</li>
+        <li><b>Tier 4 — distribution:</b> LangGraph/CrewAI adapters, ServiceNow/Jira bridges, SIEM export · certification &amp; partner program.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Recommended path to profitability</h2>
+      <ul class="clean">
+        <li><b>Open-core, self-hosted-first.</b> Free, complete core; monetize enterprise assurances.</li>
+        <li><b>Beachhead:</b> regulated self-hosted AI — government/defense and BFSI first.</li>
+        <li><b>Wedge:</b> “human signature on every AI decision, proof on your own hardware.”</li>
+        <li><b>Flagship feature:</b> non-custodial, hardware-backed signing — biggest risk, biggest revenue.</li>
+        <li><b>Budget-line conversion:</b> compliance-evidence packs turn the ledger into a must-buy.</li>
+        <li><b>Target revenue mix:</b> ~50% Sovereign · ~25% Business · ~15% services · ~10% OEM/certification.</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="foot">
+    Sources: Mordor Intelligence (agentic orchestration) · Grand View Research (AI governance) · Dataintelo (human-in-the-loop AI) · Precedence Research (sovereign AI infrastructure) · TrueFoundry &amp; Inference.net (LangSmith/Langfuse/Arize/Braintrust/Helicone pricing) · CrewAI pricing · Linux Foundation “State of Commercial Open Source 2025” · European Commission (EU AI Act). Figures reported as published; estimates vary by methodology and are used for direction and order-of-magnitude, not precision.<br>
+    Prepared for No_Gas_Labs™ — Damien Featherstone · AI-Node-Gate · Q1 2026
+  </div>
+
+</div>
+</body>
+</html>
