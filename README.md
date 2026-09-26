@@ -67,9 +67,11 @@ AI-Node-Gate/
 │   ├── ledger.py        ← the hash-chained append-only record
 │   ├── store.py         ← SQLite persistence
 │   ├── hub.py           ← nodes, proposals, the gate, the ledger
+│   ├── scouts.py        ← scout engine: channels, scoring, demo + feed sources
 │   ├── models.py        ← local model runtime adapter
 │   └── bundle.py        ← portable, verifiable export
 ├── web/                 ← the console (index.html, css, js)
+│   └── command/         ← the mobile Command Center (PWA)
 └── docs/
     ├── VISION.md        ← what we are building and why
     ├── ARCHITECTURE.md  ← how the hub is structured
@@ -88,6 +90,16 @@ AI-Node-Gate/
 **Ledger** — the append-only, hash-chained record of every node, proposal, decision, and state change. Verifiable by anyone.
 
 **Bundle** — a single JSON file containing the whole hub plus a manifest hash, verifiable offline.
+
+**Scout** — a node deployed on a mission to hunt for opportunities in a channel. It proposes; it never acts.
+
+**Mission** — a scout's assignment: what to find, and where to look.
+
+**Opportunity** — a scored finding a scout brings back (value, confidence, effort → ROI). It waits at the gate for your decision.
+
+**Pocketbook** — pipeline, expected, and realised value, plus win rate — derived from the signed record.
+
+**Capability** — your tier, level, and XP, earned from decisions, approvals, wins, and missions — also derived from the signed record.
 
 ## Status
 

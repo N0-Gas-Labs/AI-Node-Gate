@@ -20,7 +20,7 @@ import os
 import threading
 import time
 
-from . import identity, ledger
+from . import identity, ledger, scouts
 from .store import utc_now_iso
 
 
@@ -234,6 +234,146 @@ class Hub:
 
         return report
 
+    # --- scouts: deploy agents that locate opportunities ------------------
+
+    def deploy_scout(self, scout_id, mission, channel="gigs", limit=6, source=None):
+        """Send a scout (a node) out on a mission. Returns the mission + findings.
+
+        The scout proposes; it never decides. Every opportunity it returns lands
+        at the gate in state 'pending' until the human arbitrates.
+        """
+        node = self.store.get_node(scout_id)
+        if not node:
+            raise ValueError("unknown scout")
+        mission = (mission or "").strip()
+        if not mission:
+            raise ValueError("a mission needs an objective")
+        channel = channel if channel in scouts.CHANNELS else "gigs"
+
+        mid = _new_id("mission")
+        m = {
+            "id": mid, "scout_id": scout_id, "scout_name": node["name"],
+            "mission": mission, "channel": channel,
+            "source": source or "demo", "status": "running",
+            "found": 0, "created_at": time.time(),
+        }
+        self.store.add_mission(m)
+        self._log("scout.deployed", {
+            "mission_id": mid, "scout_id": scout_id, "scout_name": node["name"],
+            "mission": mission, "channel": channel,
+        })
+
+        engine = scouts.Scout(source=scouts.DemoSource())
+        try:
+            found = engine.run(mission, channel=channel, limit=limit)
+        except Exception as e:  # a scout must never take the hub down
+            found = []
+            self._log("scout.error", {"mission_id": mid, "error": str(e)[:200]})
+
+        created = []
+        for c in found:
+            oid = _new_id("opp")
+            o = {
+                "id": oid, "mission_id": mid, "scout_id": scout_id,
+                "scout_name": node["name"], "title": c["title"],
+                "summary": c["summary"], "source": c["source"], "url": c["url"],
+                "category": c["category"], "value": c["value"],
+                "confidence": c["confidence"], "effort": c["effort"],
+                "roi": c["roi"], "state": "pending", "rationale": "",
+                "created_at": time.time(), "decided_at": None,
+            }
+            self.store.add_opportunity(o)
+            created.append(o)
+
+        self.store.update_mission(mid, status="returned", found=len(created))
+        self._log("scout.returned", {
+            "mission_id": mid, "scout_name": node["name"], "channel": channel,
+            "found": len(created), "top": [c["title"] for c in created[:3]],
+        })
+        return {"mission": self.store.get_mission(mid), "opportunities": created}
+
+    def decide_opportunity(self, opportunity_id, action, rationale=""):
+        """Arbitrate an opportunity at the gate. Signed and ledgered."""
+        o = self.store.get_opportunity(opportunity_id)
+        if not o:
+            raise ValueError("unknown opportunity")
+        if action not in ("approve", "reject", "pursue", "won", "lost", "reopen"):
+            raise ValueError("unknown action")
+
+        arb = self.keyring.arbitrator
+        d = {
+            "id": _new_id("dec"), "proposal_id": opportunity_id,
+            "action": action, "rationale": rationale or "",
+            "actor_pubkey": arb["public"], "created_at": time.time(),
+        }
+        signed = {k: d[k] for k in ("id", "proposal_id", "action", "rationale",
+                                    "actor_pubkey", "created_at")}
+        d["signature"] = identity.sign(signed, arb["secret"])
+        self.store.add_decision(d)
+
+        new_state = {
+            "approve": "pursuing", "pursue": "pursuing", "reject": "rejected",
+            "won": "won", "lost": "lost", "reopen": "pending",
+        }.get(action, o["state"])
+        self.store.update_opportunity(opportunity_id, state=new_state,
+                                      rationale=rationale or "",
+                                      decided_at=time.time())
+
+        self._log("gate.opportunity." + action, {
+            "opportunity_id": opportunity_id, "title": o["title"],
+            "value": o["value"], "new_state": new_state,
+            "rationale": rationale or "", "actor_pubkey": arb["public"],
+            "signature": d["signature"],
+        })
+        return d
+
+    # --- capability & pocketbook ------------------------------------------
+
+    def capability(self):
+        """Derive the operator's capability from the verifiable record.
+
+        Capability is not a vanity metric: it is computed from signed decisions
+        and won opportunities, so it reflects what actually happened, provably.
+        """
+        decisions = self.store.list_decisions()
+        opps = self.store.list_opportunities()
+        approved = sum(1 for o in opps if o["state"] in ("pursuing", "won"))
+        won = sum(1 for o in opps if o["state"] == "won")
+        missions = self.store.list_missions()
+        xp = (len(decisions) * 5) + (approved * 10) + (won * 50) + (len(missions) * 3)
+        level = 1 + xp // 150
+        into = xp % 150
+        tiers = ["Scout", "Ranger", "Operator", "Strategist", "Principal", "Sovereign"]
+        tier = tiers[min(len(tiers) - 1, (level - 1) // 2)]
+        return {
+            "xp": xp, "level": level, "tier": tier,
+            "into_level": into, "to_next": 150 - into,
+            "decisions": len(decisions), "approved": approved, "won": won,
+            "missions": len(missions),
+        }
+
+    def pocketbook(self):
+        """Money view: pipeline, expected value, and realised wins."""
+        opps = self.store.list_opportunities()
+        open_states = ("pending", "pursuing")
+        pipeline = sum(o["value"] for o in opps if o["state"] in open_states)
+        expected = sum(o["value"] * o["confidence"] for o in opps if o["state"] in open_states)
+        won = sum(o["value"] for o in opps if o["state"] == "won")
+        lost = sum(o["value"] for o in opps if o["state"] == "lost")
+        pursuing = sum(1 for o in opps if o["state"] == "pursuing")
+        pending = sum(1 for o in opps if o["state"] == "pending")
+        won_n = sum(1 for o in opps if o["state"] == "won")
+        decided = pursuing + won_n + sum(1 for o in opps if o["state"] == "lost")
+        win_rate = round(won_n / decided, 3) if decided else 0.0
+        return {
+            "pipeline": round(pipeline, 2),
+            "expected": round(expected, 2),
+            "won": round(won, 2),
+            "lost": round(lost, 2),
+            "pending": pending, "pursuing": pursuing, "won_count": won_n,
+            "win_rate": win_rate,
+        }
+
     # --- views -------------------------------------------------------------
 
     def snapshot(self):
@@ -249,6 +389,10 @@ class Hub:
             "nodes": nodes,
             "proposals": proposals,
             "decisions": self.store.list_decisions(),
+            "missions": self.store.list_missions(),
+            "opportunities": self.store.list_opportunities(),
+            "capability": self.capability(),
+            "pocketbook": self.pocketbook(),
             "ledger": self.store.ledger_entries()[-60:],
             "ledger_count": self.store.ledger_count(),
             "arbitrator": {

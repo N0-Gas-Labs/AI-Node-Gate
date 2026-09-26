@@ -63,6 +63,38 @@ CREATE TABLE IF NOT EXISTS ledger (
     payload_json TEXT,
     hash         TEXT
 );
+
+CREATE TABLE IF NOT EXISTS missions (
+    id            TEXT PRIMARY KEY,
+    scout_id      TEXT,
+    scout_name    TEXT,
+    mission       TEXT,
+    channel       TEXT,
+    source        TEXT,
+    status        TEXT DEFAULT 'running',
+    found         INTEGER DEFAULT 0,
+    created_at    REAL
+);
+
+CREATE TABLE IF NOT EXISTS opportunities (
+    id           TEXT PRIMARY KEY,
+    mission_id   TEXT,
+    scout_id     TEXT,
+    scout_name   TEXT,
+    title        TEXT NOT NULL,
+    summary      TEXT,
+    source       TEXT,
+    url          TEXT,
+    category     TEXT,
+    value        REAL DEFAULT 0,
+    confidence   REAL DEFAULT 0,
+    effort       TEXT DEFAULT 'med',
+    roi          REAL DEFAULT 0,
+    state        TEXT DEFAULT 'pending',
+    rationale    TEXT,
+    created_at   REAL,
+    decided_at   REAL
+);
 """
 
 
@@ -210,6 +242,64 @@ class Store:
             (entry["index"], entry["prev_hash"], entry["ts"], entry["kind"],
              entry["payload_json"], entry["hash"]),
         )
+        self.conn.commit()
+
+
+    # --- missions (scout deployments) -------------------------------------
+
+    @synchronized
+    def add_mission(self, m):
+        self.conn.execute(
+            "INSERT INTO missions(id,scout_id,scout_name,mission,channel,source,"
+            "status,found,created_at) VALUES(:id,:scout_id,:scout_name,:mission,"
+            ":channel,:source,:status,:found,:created_at)",
+            m,
+        )
+        self.conn.commit()
+
+    @synchronized
+    def list_missions(self):
+        return [dict(r) for r in self.conn.execute("SELECT * FROM missions ORDER BY created_at DESC")]
+
+    @synchronized
+    def get_mission(self, mid):
+        r = self.conn.execute("SELECT * FROM missions WHERE id=?", (mid,)).fetchone()
+        return dict(r) if r else None
+
+    @synchronized
+    def update_mission(self, mid, **fields):
+        cols = ", ".join("%s=?" % k for k in fields)
+        self.conn.execute("UPDATE missions SET %s WHERE id=?" % cols, list(fields.values()) + [mid])
+        self.conn.commit()
+
+    # --- opportunities -----------------------------------------------------
+
+    @synchronized
+    def add_opportunity(self, o):
+        self.conn.execute(
+            "INSERT INTO opportunities(id,mission_id,scout_id,scout_name,title,"
+            "summary,source,url,category,value,confidence,effort,roi,state,"
+            "rationale,created_at,decided_at) VALUES(:id,:mission_id,:scout_id,"
+            ":scout_name,:title,:summary,:source,:url,:category,:value,:confidence,"
+            ":effort,:roi,:state,:rationale,:created_at,:decided_at)",
+            o,
+        )
+        self.conn.commit()
+
+    @synchronized
+    def list_opportunities(self):
+        return [dict(r) for r in self.conn.execute(
+            "SELECT * FROM opportunities ORDER BY created_at DESC")]
+
+    @synchronized
+    def get_opportunity(self, oid):
+        r = self.conn.execute("SELECT * FROM opportunities WHERE id=?", (oid,)).fetchone()
+        return dict(r) if r else None
+
+    @synchronized
+    def update_opportunity(self, oid, **fields):
+        cols = ", ".join("%s=?" % k for k in fields)
+        self.conn.execute("UPDATE opportunities SET %s WHERE id=?" % cols, list(fields.values()) + [oid])
         self.conn.commit()
 
 
