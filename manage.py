@@ -12,6 +12,9 @@ Everything an owner needs to run their hub without a single external service:
     python3 manage.py node list            list nodes and their fingerprints
     python3 manage.py propose ...          submit a signed proposal
     python3 manage.py gate ID approve      arbitrate a proposal
+    python3 manage.py doctrine KIND SUBJ   record a signed doctrine decision
+    python3 manage.py verify-bundle F      verify a bundle offline
+    python3 manage.py verify-doctrine F    verify a doctrine record offline
 """
 
 import argparse
@@ -20,6 +23,7 @@ import os
 import sys
 
 from core import bundle as bundle_mod
+from core import doctrine as doctrine_mod
 from core import identity
 from core.hub import Hub, Keyring
 from core.store import Store
@@ -118,6 +122,45 @@ def cmd_gate(args):
     store.close()
 
 
+def cmd_doctrine(args):
+    """Record a signed, standalone doctrine decision in the hub's ledger."""
+    store, hub = open_hub()
+    statement = args.statement
+    if args.statement_file:
+        with open(args.statement_file, "r") as f:
+            statement = f.read().strip()
+    if not statement:
+        print("A doctrine needs a --statement (or --statement-file).", file=sys.stderr)
+        sys.exit(2)
+    rec = hub.record_doctrine(args.kind, args.subject, statement)
+    print(json.dumps(rec, indent=2, sort_keys=True))
+    if args.export:
+        with open(args.export, "w") as f:
+            json.dump(rec, f, indent=2, sort_keys=True)
+        print("Wrote signed record to %s" % args.export)
+    print("Signed by arbitrator %s" % identity.fingerprint(rec["actor_pubkey"]))
+    store.close()
+
+
+def cmd_verify_bundle(args):
+    """Verify a portable bundle offline: chain, manifest, and signatures."""
+    b = bundle_mod.read_bundle(args.path)
+    report = bundle_mod.verify_bundle(b)
+    print("Bundle verification: %s" % ("OK" if report["ok"] else "FAILED"))
+    print(json.dumps(report, indent=2))
+    sys.exit(0 if report["ok"] else 2)
+
+
+def cmd_verify_doctrine(args):
+    """Verify a standalone doctrine record offline."""
+    with open(args.path, "r") as f:
+        rec = json.load(f)
+    ok = doctrine_mod.verify_record(rec)
+    print("Doctrine verification: %s" % ("OK" if ok else "FAILED"))
+    print(json.dumps(rec, indent=2, sort_keys=True))
+    sys.exit(0 if ok else 2)
+
+
 # --- parser ----------------------------------------------------------------
 
 def build_parser():
@@ -163,6 +206,23 @@ def build_parser():
     s.add_argument("action", choices=["approve", "reject", "amend", "delegate", "start", "complete", "reopen"])
     s.add_argument("--rationale", default="")
     s.set_defaults(func=cmd_gate)
+
+    s = sub.add_parser("doctrine", help="record a signed doctrine decision")
+    s.add_argument("kind", help="a short category, e.g. canonical-home")
+    s.add_argument("subject", help="what the decision is about, e.g. N0-Gas-Labs/AI-Node-Gate")
+    s.add_argument("--statement", default="", help="the decision text")
+    s.add_argument("--statement-file", dest="statement_file", default=None,
+                   help="read the decision text from a file")
+    s.add_argument("--export", default=None, help="write the signed record to this path")
+    s.set_defaults(func=cmd_doctrine)
+
+    s = sub.add_parser("verify-bundle", help="verify a bundle offline")
+    s.add_argument("path")
+    s.set_defaults(func=cmd_verify_bundle)
+
+    s = sub.add_parser("verify-doctrine", help="verify a doctrine record offline")
+    s.add_argument("path")
+    s.set_defaults(func=cmd_verify_doctrine)
 
     return p
 

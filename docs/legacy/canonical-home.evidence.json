@@ -1,0 +1,29 @@
+{
+  "arbitrator_public": "5013387d1465d06e4bb44a980504b28e0ce5fa8463d79d12a97360af2d5313fd",
+  "decisions": [],
+  "format": "ai-node-gate/bundle@1",
+  "ledger": [
+    {
+      "hash": "6dc855e689d8fe9b257eefe1cbfe3772f8c58d0635d2e47eaa839e3e977d50f7",
+      "index": 0,
+      "kind": "hub.initialised",
+      "payload_json": "{\"mode\":\"sovereign\",\"version\":\"0.2.0\"}",
+      "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "ts": "2026-09-26T19:02:51Z"
+    },
+    {
+      "hash": "668e8d0cdc97b843777f6b81c4e498955c991e57486efb984d7ecc47c47aefb9",
+      "index": 1,
+      "kind": "doctrine.decided",
+      "payload_json": "{\"actor_pubkey\":\"5013387d1465d06e4bb44a980504b28e0ce5fa8463d79d12a97360af2d5313fd\",\"decided_at\":1790449384.1585386,\"id\":\"doc-7a756893ecb3\",\"kind\":\"canonical-home\",\"signature\":\"wD8n9Rz8ZD4U9rA5wNg4U333YVCSQfF6AhSnyOhIKAj+tQ+C1JpDOnlHOXIcL81mkgnWUs4LWUnVrL0/e61gDg==\",\"statement\":\"The canonical home of this project is the repository N0-Gas-Labs/AI-Node-Gate. The prior organization No-Gas-Labs-Official (94 repositories) is historical reference only: its doctrine and capability are absorbed here as memory, its finance and blockchain material remains under security hold, and its Featherstone repositories remain archived. Nothing is bulk-recreated. The founding rule carries forward unchanged: autonomous nodes propose; a human decides at the gate; every decision is signed and recorded.\",\"subject\":\"N0-Gas-Labs/AI-Node-Gate\"}",
+      "prev_hash": "6dc855e689d8fe9b257eefe1cbfe3772f8c58d0635d2e47eaa839e3e977d50f7",
+      "ts": "2026-09-26T19:03:04Z"
+    }
+  ],
+  "manifest": {
+    "ledger_count": 2,
+    "public_hash": "046b8588aaa2499097ef52ef2117e37b0d0fd4c241e0153471922c86f14a535e"
+  },
+  "nodes": [],
+  "proposals": []
+}

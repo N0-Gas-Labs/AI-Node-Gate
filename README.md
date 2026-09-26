@@ -41,6 +41,11 @@ python3 manage.py gate <proposal-id> approve --rationale "On mission."
 python3 manage.py verify                 # verify the chain and all signatures
 python3 manage.py export hub.bundle.json # a portable, verifiable bundle
 python3 manage.py import hub.bundle.json # verify, then load
+python3 manage.py doctrine canonical-home N0-Gas-Labs/AI-Node-Gate \
+    --statement "The canonical home of this work is N0-Gas-Labs/AI-Node-Gate." \
+    --export docs/legacy/canonical-home.decision.json
+python3 manage.py verify-doctrine docs/legacy/canonical-home.decision.json
+python3 manage.py verify-bundle docs/legacy/canonical-home.evidence.json
 ```
 
 ## What makes it sovereign
@@ -53,6 +58,12 @@ python3 manage.py import hub.bundle.json # verify, then load
 - **Portable proof.** Export the whole hub as one JSON bundle that anyone can verify offline, without the private keys.
 
 Read the full account, including its honest limits, in [`docs/SOVEREIGNTY.md`](docs/SOVEREIGNTY.md).
+
+## Legacy memory
+
+AI-Node-Gate is the canonical home of this work. It grew out of an earlier organization, **No-Gas-Labs-Official** (94 repositories), which is now preserved here as historical memory \u2014 not as a claim of live systems, and never as a home for credentials. The prior world's charter, intended architecture, honest status audit, roadmap, portfolio lanes, and full repository inventory are absorbed into [`docs/LEGACY_PORTFOLIO.md`](docs/LEGACY_PORTFOLIO.md), and the decision that this repository is the canonical home is recorded as a signed, offline-verifiable doctrine decision in [`docs/legacy/CANONICAL_HOME.md`](docs/legacy/CANONICAL_HOME.md).
+
+The founding rule carries forward unchanged: **autonomous nodes propose; a human decides at the gate; every decision is signed and recorded.**
 
 ## Repository layout
 

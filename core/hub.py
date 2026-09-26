@@ -20,7 +20,7 @@ import os
 import threading
 import time
 
-from . import identity, ledger, scouts
+from . import doctrine, identity, ledger, scouts
 from .store import utc_now_iso
 
 
@@ -209,6 +209,44 @@ class Hub:
         signed = {k: d[k] for k in ("id", "proposal_id", "action", "rationale", "actor_pubkey", "created_at")}
         return identity.verify(signed, d["signature"], d["actor_pubkey"])
 
+    # --- doctrine (the hub's own constitution) -----------------------------
+
+    def record_doctrine(self, kind, subject, statement, decided_at=None):
+        """Record a signed, standalone doctrine decision and ledger it.
+
+        A doctrine decision is a declaration by the arbitrator that does not
+        target a proposal or an opportunity — for example, naming the canonical
+        home of the project. It is signed with the arbitrator's key and written
+        to the hash-chained ledger, so it is verifiable offline and
+        tamper-evident in the hub's own history.
+        """
+        arb = self.keyring.arbitrator
+        rec = doctrine.make_record(arb["secret"], arb["public"], kind, subject,
+                                   statement, decided_at)
+        self._log("doctrine.decided", {
+            "id": rec["id"], "kind": rec["kind"], "subject": rec["subject"],
+            "statement": rec["statement"], "decided_at": rec["decided_at"],
+            "actor_pubkey": arb["public"], "signature": rec["signature"],
+        })
+        return rec
+
+    def verify_doctrine(self, rec):
+        """Verify a doctrine record against the hub's arbitrator key."""
+        if not doctrine.verify_record(rec):
+            return False
+        # In this single-operator build the arbitrator is the only signer of
+        # doctrine, so bind the record to the hub's own key as well.
+        return rec.get("actor_pubkey") == self.keyring.arbitrator["public"]
+
+    def list_doctrines(self):
+        """Every doctrine decision recorded in the ledger, in order."""
+        out = []
+        for e in self.store.ledger_entries():
+            rec = doctrine.record_from_ledger_entry(e)
+            if rec is not None:
+                out.append(rec)
+        return out
+
     # --- integrity ---------------------------------------------------------
 
     def verify_all(self):
@@ -229,6 +267,16 @@ class Hub:
         for d in self.store.list_decisions():
             good = self.verify_decision(d)
             report["decisions"].append({"id": d["id"], "action": d["action"], "signature_ok": good})
+            if not good:
+                report["ok"] = False
+
+        report["doctrines"] = []
+        for rec in self.list_doctrines():
+            good = self.verify_doctrine(rec)
+            report["doctrines"].append({
+                "id": rec["id"], "kind": rec["kind"],
+                "subject": rec["subject"], "signature_ok": good,
+            })
             if not good:
                 report["ok"] = False
 
