@@ -11,6 +11,7 @@ import tempfile
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core import bundle as bundle_mod
+from core import doctrine as doctrine_mod
 from core import ed25519, identity, ledger
 from core.hub import Hub, Keyring
 from core.store import Store
@@ -150,10 +151,51 @@ def test_scouts_and_opportunities():
     store.close()
 
 
+def test_doctrine():
+    print("doctrine")
+    tmp = tempfile.mkdtemp()
+    store = Store(os.path.join(tmp, "hub.db"))
+    keyring = Keyring(os.path.join(tmp, "keyring.json"))
+    hub = Hub(store, keyring)
+
+    rec = hub.record_doctrine("canonical-home", "N0-Gas-Labs/AI-Node-Gate",
+                              "This repository is the canonical home.")
+    check("doctrine signed", bool(rec["signature"]))
+    check("doctrine record verifies offline", doctrine_mod.verify_record(rec))
+    check("hub accepts its own doctrine", hub.verify_doctrine(rec))
+
+    listed = hub.list_doctrines()
+    check("doctrine appears in the ledger", len(listed) == 1 and listed[0]["id"] == rec["id"])
+
+    report = hub.verify_all()
+    check("full verification passes with doctrine", report["ok"])
+    check("verify_all reports doctrines", len(report.get("doctrines", [])) == 1
+          and report["doctrines"][0]["signature_ok"])
+
+    # tampering with the statement must break verification
+    forged = dict(rec)
+    forged["statement"] = "A different statement."
+    check("tampered doctrine fails", not doctrine_mod.verify_record(forged))
+
+    # the doctrine survives into a portable bundle and re-verifies from the ledger
+    b = bundle_mod.export_bundle(store, keyring.arbitrator["public"])
+    check("bundle with doctrine verifies", bundle_mod.verify_bundle(b)["ok"])
+    from_ledger = None
+    for e in b["ledger"]:
+        r = doctrine_mod.record_from_ledger_entry(e)
+        if r is not None:
+            from_ledger = r
+    check("doctrine reconstructs from bundle ledger",
+          from_ledger is not None and doctrine_mod.verify_record(from_ledger))
+
+    store.close()
+
+
 if __name__ == "__main__":
     test_crypto()
     test_ledger()
     test_hub_flow()
     test_scouts_and_opportunities()
+    test_doctrine()
     print("\n%d passed, %d failed" % (PASS, FAIL))
     sys.exit(1 if FAIL else 0)
