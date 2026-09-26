@@ -18,9 +18,13 @@ That distinction matters for trust. An autonomous system that acts without a hum
 
 Arbitration is a specific act, and it is worth being precise about it. When a node submits a proposal, the human can do one of four things. They can approve it, and it proceeds. They can reject it, and it stops. They can amend it — change the scope, the parameters, the target — and send it back as a modified instruction. Or they can delegate it, handing the decision or the work to another node with clearer context. Every one of those four actions is a decision, and every decision is recorded. The ledger is not bureaucracy; it is the memory that lets a human trust a system they cannot watch every second of.
 
+## Sovereignty
+
+There is a second claim underneath the first, and it is just as important. Augmentation only counts if the thing doing the augmenting is *yours*. A hub that depends on a rented model, a cloud account, and a vendor's continued goodwill is not an extension of your mind — it is a subscription to someone else's. So the hub is built to be owned: it runs on the Python standard library with no dependencies at all, stores everything in one file you hold, gives every actor a real cryptographic identity, keeps a record anyone can verify offline, and can drive nodes with a model on your own hardware. Sovereignty here is not a slogan; it is a set of concrete properties, each of which can be checked. The full account, including where the current build honestly falls short, is in [`SOVEREIGNTY.md`](SOVEREIGNTY.md).
+
 ## Where this is going
 
-The long-term shape of the project is a hub that can host many nodes of many kinds, route work between them intelligently, present the human with exactly the decisions that need a human, and quietly handle the ones that do not. The prototype in this repository is deliberately small — a single page, a handful of nodes, a ledger — because a vision is only useful once it can be seen. What matters at this stage is that the central idea is legible: autonomous coordination, human arbitration, and a record of both. Everything else is elaboration.
+The long-term shape of the project is a hub that can host many nodes of many kinds, route work between them intelligently, present the human with exactly the decisions that need a human, and quietly handle the ones that do not. The build in this repository is deliberately small and deliberately self-contained — a single process, a handful of nodes, a verifiable ledger — because a vision is only useful once it can be seen and checked. What matters at this stage is that the central idea is legible: autonomous coordination, human arbitration, and a record of both, all owned rather than rented. Everything else is elaboration.
 
 ## The invitation
 
